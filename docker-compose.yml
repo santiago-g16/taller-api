@@ -1,0 +1,39 @@
+services:
+  db:
+    image: postgres:15-alpine
+    container_name: taller_db
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: taller_user
+      POSTGRES_PASSWORD: taller_pass
+      POSTGRES_DB: taller_db
+    ports:
+      - "5433:5432"
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U taller_user -d taller_db"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+  api:
+    image: japago1790/softwareiii-api:latest
+    container_name: taller_api
+    restart: unless-stopped
+    depends_on:
+      db:
+        condition: service_healthy
+    environment:
+      FLASK_ENV: development
+      PORT: 3000
+      DB_HOST: db
+      DB_PORT: 5432
+      DB_USER: taller_user
+      DB_PASSWORD: taller_pass
+      DB_NAME: taller_db
+    ports:
+      - "3000:3000"
+
+volumes:
+  pgdata:
